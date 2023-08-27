@@ -1,72 +1,85 @@
-dx = [-1, 1, 0, 0]
-dy = [0, 0, -1, 1]
+def is_valid_move(row, col, rows, cols, matrix):
+    return 0 <= row < rows and 0 <= col < cols and matrix[row][col] != '#'
 
+def generate_adjacency_list(grid):
+    rows = len(grid)
+    cols = len(grid[0])
+    graph = []
 
-def is_valid(x, y, W, H):
-    return 0 <= x < W and 0 <= y < H
+    for row in range(rows):
+        for col in range(cols):
+            if grid[row][col] != '#':
+                neighbors = []
+                if is_valid_move(row - 1, col, rows, cols, grid):
+                    neighbors.append(grid[row - 1][col])
+                if is_valid_move(row + 1, col, rows, cols, grid):
+                    neighbors.append(grid[row + 1][col])
+                if is_valid_move(row, col - 1, rows, cols, grid):
+                    neighbors.append(grid[row][col - 1])
+                if is_valid_move(row, col + 1, rows, cols, grid):
+                    neighbors.append(grid[row][col + 1])
 
-def build_graph(grid, W, H):
-    graph={}
-    for x in range(H):
-        for y in range(W):
-            # Ignorar paredes
-            if grid[x][y] == '#':
-                continue
-
-            graph[(x, y)] = []
-
-            # Generar conexiones 
-            for i in range(4):
-                new_x, new_y = x + dx[i], y + dy[i]
-                if is_valid(new_x, new_y,W,H) and grid[new_x][new_y] != '#':
-                    graph[(x, y)].append((new_x, new_y))
+                graph.append(neighbors)
+                
     return graph
 
-def dfs(node, visited,grid,graph):
-    x, y = node
-    if visited[x][y] or grid[x][y] == 'T':
-        return 0
+def count_golds(graph):
+    num_v = len(graph)
+    Gs = []
+    Ts = []
+    position_player = None
 
-    visited[x][y] = True
-    gold_count = 0
+    for v in range(num_v):
+        for connection in graph[v]:
+            if connection == "P":
+                position_player = v
+            elif connection == "G":
+                Gs.append(v)
+            elif connection == "T":
+                Ts.append(v)
 
-    if grid[x][y] == 'G':
-        gold_count += 1
+    def bfs(pos):
+        visited = [False] * num_v
+        visited[pos[0]] = True
+        cola = [pos]
+        golds = 0
 
-    for neighbor in graph[node]:
-        gold_count += dfs(neighbor, visited,grid,graph)
+        while cola:
+            node = cola.pop(0)
+            if node in Gs:
+                Gs.remove(node)
+                golds += 1
 
-    return gold_count
-
+            for neighbor in graph[node]:
+                if not visited[neighbor] and (neighbor not in Ts):
+                    visited[neighbor] = True
+                    cola.append(neighbor)
+        return golds
+    total_golds = 0
+    if position_player is not None:
+        total_golds += bfs(position_player)
+    return total_golds
 
 def main():
-    resultados = []
+    total_answers = []
     while True:
         try:
-            line = input()
-            if not line:
+            line_m= input()
+            if not line_m:
                 break
             
-            W, H = map(int, line.split())
-            grid = [input() for _ in range(H)]
-            graph = build_graph(grid, W, H)
-
-            start_x, start_y = -1, -1
-
-            # Find the starting position of the player
-            for x in range(H):
-                for y in range(W):
-                    if grid[x][y] == 'P':
-                        start_x, start_y = x, y
-                        break
-                if start_x != -1:
-                    break
-
-            visited = [[False] * W for _ in range(H)]
-            gold = dfs((start_x, start_y), visited,grid,graph)
-            resultados.append(gold)
+            W, H = map(int, line_m.split())
+            lines =[]
+            for _ in range(H):
+                line = input()
+                lines.append(line)
+                
+            grid = [list(map(str,line.split())) for line in lines]
+            graph = matrix_graph(grid)
+            answer = count_golds(graph)
+            total_answers.append(answer)
         except EOFError:
             break 
-    for i in resultados:
+    for i in total_answers:
             print(i)
 main()
