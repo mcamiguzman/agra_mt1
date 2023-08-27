@@ -1,64 +1,67 @@
-def is_valid_move(row, col, rows, cols, matrix):
-    return 0 <= row < rows and 0 <= col < cols and matrix[row][col] != '#'
+def generate_graph(grid):
+    graph = {}
 
-def generate_adjacency_list(grid):
-    rows = len(grid)
-    cols = len(grid[0])
-    graph = []
+    # Crear verices 
+    for row in range(len(grid)):
+        for col in range(len(grid[row])):
+            nodo = grid[row][col]
+            if nodo not in graph:
+                graph[nodo] = []
 
-    for row in range(rows):
-        for col in range(cols):
-            if grid[row][col] != '#':
-                neighbors = []
-                if is_valid_move(row - 1, col, rows, cols, grid):
-                    neighbors.append(grid[row - 1][col])
-                if is_valid_move(row + 1, col, rows, cols, grid):
-                    neighbors.append(grid[row + 1][col])
-                if is_valid_move(row, col - 1, rows, cols, grid):
-                    neighbors.append(grid[row][col - 1])
-                if is_valid_move(row, col + 1, rows, cols, grid):
-                    neighbors.append(grid[row][col + 1])
-
-                graph.append(neighbors)
-                
+            # conexiones 
+            if row > 0:
+                graph[nodo].append(grid[row - 1][col])
+            if row < len(grid) - 1:
+                graph[nodo].append(grid[row + 1][col])
+            if col > 0:
+                graph[nodo].append(grid[row][col - 1])
+            if col < len(grid[row]) - 1:
+                graph[nodo].append(grid[row][col + 1])
     return graph
 
-def count_golds(graph):
+def calculate_gols_total(grafo):
+    num_nodos = len(grafo)
+    total_gold = 0
+
+    for nodo in grafo:
+        if nodo == "G":
+            total_gold += 1
+    return total_gold
+
+def calculate1(graph):
     num_v = len(graph)
-    Gs = []
-    Ts = []
-    position_player = None
+    invalid_gold = 0
 
     for v in range(num_v):
-        for connection in graph[v]:
-            if connection == "P":
-                position_player = v
-            elif connection == "G":
-                Gs.append(v)
-            elif connection == "T":
-                Ts.append(v)
+        if graph[v] == "G":
+            invalid = False
+            for neighbor in graph[v]:
+                if neighbor == "#":
+                    invalid = True
+                elif neighbor == "T":
+                    invalid = True
+                    for other_neighbor in graph[v]:
+                        if other_neighbor == "#":
+                            invalid = False
+                        if other_neighbor == "G":
+                            invalid_gold += 1
+                            break
+                    break
+            if invalid:
+                invalid_gold += 1
+    return invalid_gold
 
-    def bfs(pos):
-        visited = [False] * num_v
-        visited[pos[0]] = True
-        cola = [pos]
-        golds = 0
+def calculate2(graph):
+    num_v = len(graph)
+    invalid_gold = 0
 
-        while cola:
-            node = cola.pop(0)
-            if node in Gs:
-                Gs.remove(node)
-                golds += 1
-
-            for neighbor in graph[node]:
-                if not visited[neighbor] and (neighbor not in Ts):
-                    visited[neighbor] = True
-                    cola.append(neighbor)
-        return golds
-    total_golds = 0
-    if position_player is not None:
-        total_golds += bfs(position_player)
-    return total_golds
+    for v in range(num_v):
+        if "T" in graph[v] and "P" not in graph[v]:
+            for neighbor in graph[v]:
+                if neighbor == "G":
+                    invalid_gold += 1
+                    break
+    return invalid_gold              
 
 def main():
     total_answers = []
@@ -75,8 +78,8 @@ def main():
                 lines.append(line)
                 
             grid = [list(map(str,line.split())) for line in lines]
-            graph = matrix_graph(grid)
-            answer = count_golds(graph)
+            graph = generate_graph(grid)
+            answer = calculate_gols_total(graph)-(calculate1(graph)+calculate2(graph))
             total_answers.append(answer)
         except EOFError:
             break 
