@@ -54,18 +54,18 @@ def read_grid():
 def main():
     results = []
     while True:
-        try:
-            n = int(input())
-            input()
-
-            for _ in range(n):
-                grid = read_grid()
-                graph = grid_graph(grid)
-                result = count_groups(graph)
-                results.append(result)
-
-                if _ < n -1:
-                    input()
-        except EOFError:
+        n = int(input())
+        if not n:
             break
+        input()
+        input()
+        for _ in range(n):
+            grid = read_grid()
+            graph = grid_graph(grid)
+            result = count_groups(graph)
+            results.append(result)
+
+            if _ < n -1:
+                input()
+main()
 
